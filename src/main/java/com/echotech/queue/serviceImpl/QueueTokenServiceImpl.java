@@ -4,13 +4,16 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import org.hibernate.internal.build.AllowSysOut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.echotech.queue.dto.QueueTokenRequest;
 import com.echotech.queue.dto.ResponseDto;
+import com.echotech.queue.dto.UserRequest;
 import com.echotech.queue.model.PatientMaster;
 import com.echotech.queue.model.QueueToken;
 import com.echotech.queue.repository.PatientRepository;
@@ -80,6 +83,15 @@ public class QueueTokenServiceImpl implements QueueTokenService {
 			
 		}else { // Patient doesn't exist and both patient and token should be created newly
 			System.out.println("IN ELSE");
+
+			Integer userSysId = createUserInAuthService(queueTokenRequest);
+			System.out.println("UID: " + userSysId);
+			if (userSysId == null) {
+				response.setStatus("FAILURE");
+				response.setMessage("User creation failed");
+				return response;
+			}
+
 			PatientMaster patient = new PatientMaster();
 			
 			patient.setPtntMobileNumber(queueTokenRequest.getMobileNumber());
@@ -88,6 +100,7 @@ public class QueueTokenServiceImpl implements QueueTokenService {
 			patient.setPtntGender(queueTokenRequest.getGender());
 			patient.setPtntBloodGroup(queueTokenRequest.getBloodGroup());
 			patient.setPtntCity(queueTokenRequest.getCity());
+			patient.setPtntUserSysId(userSysId);
 			patient.setPtntCreatedAt(LocalDateTime.now());
 			
 			patient = patientRepo.save(patient);
@@ -149,6 +162,43 @@ public class QueueTokenServiceImpl implements QueueTokenService {
 	            : lastSeq + 1;
 
 	    return String.format("%s-%02d", prefix, nextSequence);
+	}
+
+	private Integer createUserInAuthService(QueueTokenRequest queueTokenRequest) {
+		UserRequest userRequest = new UserRequest();
+		userRequest.setMobileNumber(queueTokenRequest.getMobileNumber());
+		userRequest.setFullName(queueTokenRequest.getFullName());
+
+		try {
+			RestTemplate restTemplate = new RestTemplate();
+			System.out.println("URL: " + webServiceUtility.getCreateUserUrl());
+
+			ResponseEntity<ResponseDto> userResponse =
+					
+					restTemplate.postForEntity(webServiceUtility.getCreateUserUrl(), userRequest, ResponseDto.class);
+
+			
+			System.out.println(userResponse.getBody().getData());
+			if (userResponse.getBody() == null
+					|| !"SUCCESS".equalsIgnoreCase(userResponse.getBody().getStatus())
+					|| userResponse.getBody().getData() == null) {
+				return null;
+			}
+			
+			Integer integer = 1;
+
+			return integer;
+		} catch (RestClientException ex) {
+			ex.printStackTrace();
+			return null;
+		}
+	}
+
+	private Integer toInteger(Object value) {
+		if (value instanceof Number number) {
+			return number.intValue();
+		}
+		return Integer.valueOf(value.toString());
 	}
 
 }

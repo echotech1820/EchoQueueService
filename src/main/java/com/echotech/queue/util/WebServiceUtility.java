@@ -13,9 +13,16 @@ public class WebServiceUtility {
 	
 	@Value("${spring.master.base.url}")
 	public String masterBaseUrl;
+
+	@Value("${spring.auth.base.url}")
+	public String authBaseUrl;
 	
 	public String getClinicNameUrl(Integer clinicId) {
 	    return masterBaseUrl + "api/v1/clinic/getClinName?clinicId=" + clinicId;
+	}
+
+	public String getCreateUserUrl() {
+		return authBaseUrl + "api/v1/user/create";
 	}
 	
 	public Date stringToDate(String date) {

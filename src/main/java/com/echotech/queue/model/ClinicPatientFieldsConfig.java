@@ -24,22 +24,22 @@ public class ClinicPatientFieldsConfig {
     @Column(name = "cpfc_pfm_sys_id")
     private Integer cpfcPfmSysId;
 
-    @Column(name = "cpfc_show_in_form")
+    @Column(name = "cpfc_show_in_form", length = 2)
     private String cpfcShowInForm;
 
-    @Column(name = "cpfc_is_mandatory")
+    @Column(name = "cpfc_is_mandatory", length = 2)
     private String cpfcIsMandatory;
-    
+
     @Column(name = "cpfc_created_at")
     private LocalDateTime cpfcCreatedAt;
-    
-    @Column(name = "cpfc_created_by")
+
+    @Column(name = "cpfc_created_by", length = 45)
     private String cpfcCreatedBy;
-    
+
     @Column(name = "cpfc_updated_at")
     private LocalDateTime cpfcUpdatedAt;
-    
-    @Column(name = "cpfc_updated_by")
+
+    @Column(name = "cpfc_updated_by", length = 45)
     private String cpfcUpdatedBy;
 
 	public Integer getCpfcSysId() {

@@ -42,6 +42,7 @@ public class ClinicPatientFieldsConfigServiceImpl implements ClinicPatientFields
 	public ResponseDto saveClinicPatientFieldsConfig(ClinicPatientFieldsConfigRequest request) {
 		ResponseDto response = new ResponseDto();
 
+		//validate given request
 		String requestError = validateRequest(request);
 		if (requestError != null) {
 			response.setStatus("FAILURE");
@@ -49,6 +50,7 @@ public class ClinicPatientFieldsConfigServiceImpl implements ClinicPatientFields
 			return response;
 		}
 
+		//validate clinic 
 		String clinicError = validateClinic(request.getClinicSysId());
 		if (clinicError != null) {
 			response.setStatus("FAILURE");
@@ -85,12 +87,12 @@ public class ClinicPatientFieldsConfigServiceImpl implements ClinicPatientFields
 			return response;
 		}
 
-		String fieldNameError = validateFieldNames(request.getFields(), masterById);
-		if (fieldNameError != null) {
-			response.setStatus("FAILURE");
-			response.setMessage(fieldNameError);
-			return response;
-		}
+//		String fieldNameError = validateFieldNames(request.getFields(), masterById);
+//		if (fieldNameError != null) {
+//			response.setStatus("FAILURE");
+//			response.setMessage(fieldNameError);
+//			return response;
+//		}
 
 		List<ClinicPatientFieldsConfig> existingConfigs =
 				clinicPatientFieldsConfigRepo.findByCpfcClinSysId(request.getClinicSysId());
