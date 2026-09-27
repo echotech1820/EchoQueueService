@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.echotech.queue.dto.QueueTokenListRequest;
 import com.echotech.queue.dto.QueueTokenRequest;
 import com.echotech.queue.dto.ResponseDto;
 import com.echotech.queue.service.QueueTokenService;
@@ -23,6 +24,12 @@ public class QueueTokenController {
 		ResponseDto response = queueService.createToken(queueTokenRequest);
 		
 		return ResponseEntity.ok(response); 
+	}
+
+	@PostMapping("/getTokens")
+	public ResponseEntity<ResponseDto> getTokens(@RequestBody QueueTokenListRequest request) {
+		ResponseDto response = queueService.getTokens(request);
+		return ResponseEntity.ok(response);
 	}
 
 }

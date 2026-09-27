@@ -2,6 +2,10 @@ package com.echotech.queue.serviceImpl;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import org.hibernate.internal.build.AllowSysOut;
@@ -11,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.echotech.queue.dto.QueueTokenListItem;
+import com.echotech.queue.dto.QueueTokenListRequest;
 import com.echotech.queue.dto.QueueTokenRequest;
 import com.echotech.queue.dto.ResponseDto;
 import com.echotech.queue.dto.UserRequest;
@@ -147,6 +153,75 @@ public class QueueTokenServiceImpl implements QueueTokenService {
 		}
 		
 		return response;
+	}
+
+	@Override
+	public ResponseDto getTokens(QueueTokenListRequest request) {
+		ResponseDto response = new ResponseDto();
+
+		String validationError = validateListRequest(request);
+		if (validationError != null) {
+			response.setStatus("FAILURE");
+			response.setMessage(validationError);
+			return response;
+		}
+
+		Date tokenDate;
+		try {
+			if (request.getTokenDate() == null || request.getTokenDate().isBlank()) {
+				tokenDate = webServiceUtility.stringToDate(
+						LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
+			} else {
+				tokenDate = webServiceUtility.stringToDate(request.getTokenDate().trim());
+			}
+		} catch (DateTimeParseException ex) {
+			response.setStatus("FAILURE");
+			response.setMessage("Token date must be in dd-MM-yyyy format");
+			return response;
+		}
+
+		String status = blankToNull(request.getStatus());
+		String search = blankToNull(request.getSearch());
+
+		List<QueueTokenListItem> tokens = queueTokenRepo.findTokensByFilters(
+				request.getClinicSysId(),
+				tokenDate,
+				status,
+				request.getConsultingDoctorSysId(),
+				search);
+
+		response.setStatus("SUCCESS");
+		if (tokens == null || tokens.isEmpty()) {
+			response.setMessage("No patients to serve");
+			response.setData(List.of());
+		} else {
+			response.setMessage("Tokens fetched successfully");
+			response.setData(tokens);
+		}
+		return response;
+	}
+
+	private String validateListRequest(QueueTokenListRequest request) {
+		if (request == null) {
+			return "Request body is required";
+		}
+		if (request.getClinicSysId() == null) {
+			return "Clinic Id is required";
+		}
+		if (request.getClinicSysId() <= 0) {
+			return "Clinic Id must be a positive number";
+		}
+		if (request.getConsultingDoctorSysId() != null && request.getConsultingDoctorSysId() <= 0) {
+			return "Consulting doctor Id must be a positive number";
+		}
+		return null;
+	}
+
+	private String blankToNull(String value) {
+		if (value == null || value.isBlank()) {
+			return null;
+		}
+		return value.trim();
 	}
 	
 	public String generateTokenNumber(
